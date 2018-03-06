@@ -1,5 +1,6 @@
 package com.jrschugel.loadmanager;
 
+import android.app.Dialog;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.database.Cursor;
@@ -7,12 +8,25 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 public class Loads_Fragment_Info extends Fragment {
 
@@ -24,7 +38,7 @@ public class Loads_Fragment_Info extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_sub__fragment01, container, false);
+        final View rootView = inflater.inflate(R.layout.fragment_sub__fragment01, container, false);
         context = getActivity();
 
         Bundle b = getArguments();
@@ -34,6 +48,69 @@ public class Loads_Fragment_Info extends Fragment {
 
         myDb = new DatabaseHelper(context);
         myDb2 = new DatabaseHelperStops(context);
+
+        Button butChangeTrlr = rootView.findViewById(R.id.butTrlrChange);
+        butChangeTrlr.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final Dialog dialog = new Dialog(getActivity());
+                dialog.setContentView(R.layout.dialog_change_trailer);
+                dialog.setCancelable(true);
+
+                final EditText etNewTrailer = dialog.findViewById(R.id.etTrailer);
+                Button butSave = dialog.findViewById(R.id.butSave);
+                Button butCancel = dialog.findViewById(R.id.butCancel);
+
+                butSave.setOnClickListener(new View.OnClickListener() {
+
+                    @Override
+                    public void onClick(View v) {
+                        final String TrlrNumber = etNewTrailer.getText().toString();
+                        myDb.changeTrailerNumber(LoadNumber.toString(), TrlrNumber);
+                        StringRequest stringRequest = new StringRequest(Request.Method.POST, Config.DATA_CHANGE_TRAILER,
+                                new Response.Listener<String>() {
+                                    @Override
+                                    public void onResponse(String Response) {
+                                        Toast.makeText(context, "Online Trailer Changed", Toast.LENGTH_SHORT).show();
+                                    }
+                                },
+                                new Response.ErrorListener() {
+                                    @Override
+                                    public void onErrorResponse(VolleyError error) {
+                                        Log.e("Volley Error: ", error.toString());
+                                    }
+                                }) {
+                            @Override
+                            protected Map<String, String> getParams() {
+                                Map<String, String> parameters = new HashMap<>();
+                                parameters.put("LoadNumber", LoadNumber.toString());
+                                parameters.put("TrailerNumber", TrlrNumber);
+                                return parameters;
+                            }
+                        };
+                        //Creating a request queue
+                        RequestQueue requestQueue = Volley.newRequestQueue(context);
+                        //Adding request to the queue
+                        requestQueue.add(stringRequest);
+                        TextView tvTrlrNo = rootView.findViewById(R.id.textViewTrlrNumber);
+                        tvTrlrNo.setText(TrlrNumber);
+                        Toast.makeText(context, "Trailer Changed", Toast.LENGTH_SHORT).show();
+                        dialog.dismiss();
+                    }
+                });
+
+                butCancel.setOnClickListener(new View.OnClickListener() {
+
+                    @Override
+                    public void onClick(View v) {
+
+                        dialog.dismiss();
+                    }
+                });
+
+                dialog.show();
+            }
+        });
 
         Cursor cursor =  myDb.getLoadData(LoadNumber);
 

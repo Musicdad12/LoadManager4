@@ -11,7 +11,8 @@ public class Config {
     static final String DATA_SAVE_CUSTOMER = "http://truckersean.com/android/setSaveLoadCust.php";
     static final String DATA_GET_CUSTOMERS = "http://truckersean.com/android/getCustomerNames.php";
     static final String DATA_SAVE_LOAD = "http://truckersean.com/android/setSaveLoadData-new.php";
-    static final String DATA_GET_CUSTID = "http://truckersean.com/android/getSelectedCustomer";
+    static final String DATA_GET_CUSTID = "http://truckersean.com/android/getSelectedCustomer.php";
+    static final String DATA_CHANGE_TRAILER = "http://truckersean.com/android/setChangeTrailer.php";
 
     //Tags used in the JSON String
     static final String TAG_LOADNUMBER = "LoadNumber";

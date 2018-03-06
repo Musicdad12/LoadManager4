@@ -208,4 +208,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getReadableDatabase();
         return db.rawQuery("select * from " + TABLE_SCANS + " where " + Config.TAG_SCANLOAD + " = " + LoadNumber,null);
     }
+
+    void changeTrailerNumber (String Loadnumber, String newTrailerNumber) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String whereClause = Config.TAG_LOADNUMBER + " = " + Loadnumber;
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(Config.TAG_TRLRNUMBER, newTrailerNumber);
+        db.update(TABLE_NAME, contentValues, whereClause, null);
+    }
 }
