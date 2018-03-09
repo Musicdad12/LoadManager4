@@ -2,6 +2,7 @@ package com.jrschugel.loadmanager;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -41,6 +42,7 @@ public class MainActivityFragment extends Fragment implements SharedPreferences.
     DatabaseHelperExpense myDb3;
     // Initialize array for safety messages
     String[] mMessageArray;
+    ListView lstMessages;
 
     @Nullable
     @Override
@@ -58,7 +60,7 @@ public class MainActivityFragment extends Fragment implements SharedPreferences.
 
         //Initializing TextViews
         TextView tvWelcome = rootView.findViewById(R.id.tvWelcome);
-        ListView lvMessages = rootView.findViewById(R.id.lvMessages);
+        lstMessages = rootView.findViewById(R.id.lvMessages);
 
         // Session class instance
         session = new SessionManager(context);
@@ -115,6 +117,8 @@ public class MainActivityFragment extends Fragment implements SharedPreferences.
         //Setup check for new loads and send notification
         LoadPreferences();
         updateMessageView(rootView);
+        updateTextMessages(rootView);
+
         // Get new load count
         Integer NewLoads = myDb.NewLoadCount();
         TextView tvNewLoads = rootView.findViewById(R.id.tvNewLoads);
@@ -128,7 +132,7 @@ public class MainActivityFragment extends Fragment implements SharedPreferences.
             tvNewLoads.setTextColor(Color.RED);
         }
 
-        lvMessages.setEmptyView(rootView.findViewById(android.R.id.empty));
+        lstMessages.setEmptyView(rootView.findViewById(android.R.id.empty));
         return rootView;
     }
 
@@ -144,6 +148,11 @@ public class MainActivityFragment extends Fragment implements SharedPreferences.
         textView.setText(mMessageArray[generatedIndex]);
     }
 
+    private void updateTextMessages(View v) {
+        Cursor curMessages = myDb.getMessages();
+        MessageListAdapter messageListAdapter = new MessageListAdapter(getActivity(), curMessages);
+        lstMessages.setAdapter(messageListAdapter);
+    }
 
     private void LoadPreferences() {
         SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(context);

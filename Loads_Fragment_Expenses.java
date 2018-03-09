@@ -792,7 +792,7 @@ public class Loads_Fragment_Expenses extends Fragment  {
         cursorConsignee.close();
 
         SimpleDateFormat input = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
-        SimpleDateFormat output = new SimpleDateFormat("MM/dd/yy", Locale.US);
+        SimpleDateFormat output = new SimpleDateFormat("M/d/yy", Locale.US);
         try {
             Date dateValue = input.parse(SHIPDATE);
             SHIPDATEshort = output.format(dateValue);

@@ -67,6 +67,9 @@ public class Config {
     static final String TAG_CUSTCONTACT = "CustomerContact";
     static final String TAG_CUSTCOMMENT = "CustomerComment";
     static final String TAG_SHIPPERID = "ShipperID";
+    static final String TAG_MESSTIMEDATE = "MessageDate";
+    static final String TAG_MESSSENDER = "MessageSender";
+    static final String TAG_MESSTEXT = "MessageText";
 
     //JSON array name
     static final String JSON_ARRAY = "Loads";

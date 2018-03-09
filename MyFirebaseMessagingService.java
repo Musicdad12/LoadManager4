@@ -29,6 +29,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Calendar;
 import java.util.Objects;
 
 import me.leolin.shortcutbadger.ShortcutBadger;
@@ -38,13 +39,17 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     // Session Manager Class
     SessionManager session;
     final static Integer mNotificationIdNewLoad = 123;
-    final static String CHANNEL_ID = "new_load_01";
+    public static final String LOAD_INFO_CHANNEL_ID = "2465";
+    public static final String MESSAGE_CHANNEL_ID = "2466";
+    public static final String LOAD_INFO_CHANNEL_NAME = "New Load Information";
+    public static final String MESSAGE_CHANNEL_NAME = "Messages";
     private static final String TAG = "MyFirebaseMessagingServ";
     DatabaseHelper myDb;
     DatabaseHelperStops myDb2;
     String LoadNumber;
     NotificationManager mNotificationManager;
     Uri uriSound = null;
+    NotificationUtils myNu;
 
 
     @Override
@@ -56,9 +61,10 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         String sound = message.getNotification().getSound();
         String text = message.getNotification().getBody();
         session = new SessionManager(this);
+        myDb = new DatabaseHelper(this);
         myDb2 = new DatabaseHelperStops(this);
+        myNu = new NotificationUtils(this);
 
-        int id = 0;
         if (Objects.equals(title, "Load Information")) {
 
             String strLoadData = message.getData().toString();
@@ -120,7 +126,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                                 CustCity, CustState, CustPhone, CustContact, EarlyDate, EarlyTime, LateDate, LateTime);
                     }
 
-                    this.sendNotification(new NotificationData(id, title, text, sound));
+                    this.sendNotification(new NotificationData(LOAD_INFO_CHANNEL_ID, title, text, sound));
                     ShortcutBadger.applyCount(this, myDb.NotificationLoadCount());
 
                 } catch (JSONException e) {
@@ -128,81 +134,74 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                     Log.d("GCM", "onMessageReceived: " + e.toString());
                 }
             }
+        } else if (Objects.equals(title, "Message")) {
+            Log.d("GCM", "onMessageReceived: Text Message received");
+            Calendar c = Calendar.getInstance();
+            String strLoadData = message.getData().toString();
+            if (strLoadData != null) {
+                try {
+                    JSONObject jsonObj = new JSONObject(strLoadData);
+                    myDb.saveMessage(c.getTime().toString(), jsonObj.toString(), message.getNotification().getBody());
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    Log.d("GCM", "onMessageReceived: " + e.toString());
+                }
+            }
+            this.sendNotification(new NotificationData(MESSAGE_CHANNEL_ID, title, text, sound));
         }
     }
 
      // Create and show a simple notification containing the received GCM message.
     public void sendNotification(NotificationData notificationData) {
-        Intent intent = new Intent(this, MainActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        switch (notificationData.getId()) {
+            case LOAD_INFO_CHANNEL_ID:
 
-        PendingIntent contentIntent = PendingIntent.getActivity(this, 0, intent, 0);
+                Intent intent = new Intent(this, NavDrawerActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                PendingIntent contentIntent = PendingIntent.getActivity(this, 0, intent, 0);
 
-        RemoteViews remoteViewsBig = new RemoteViews(this.getPackageName(), R.layout.custom_notification);
-        //RemoteViews remoteViews = new RemoteViews(context.getPackageName(), R.layout.notification_small);
-        //remoteViewsBig.setImageViewBitmap(R.id.banner, bitmap);
+                RemoteViews remoteViewsBig = new RemoteViews(this.getPackageName(), R.layout.custom_notification);
+                remoteViewsBig.setTextViewText(R.id.tvTitle, notificationData.getTitle());
+                remoteViewsBig.setTextViewText(R.id.tvShipper, myDb2.getShipper(LoadNumber));
+                remoteViewsBig.setTextViewText(R.id.tvConsignee, myDb2.getConsignee(LoadNumber));
 
-        remoteViewsBig.setTextViewText(R.id.tvTitle, notificationData.getTitle());
-        //remoteViews.setTextViewText(R.id.button, data.getButtonText());
+                NotificationCompat.Builder builder = new NotificationCompat.Builder(this, LOAD_INFO_CHANNEL_ID);
+                builder.setSmallIcon(R.drawable.truck_icon_16);
+                builder.setAutoCancel(true);
+                builder.setContentIntent(contentIntent);
+                builder.setPriority(NotificationCompat.PRIORITY_DEFAULT);
+                //builder.setCustomContentView(remoteViews);
+                builder.setContent(remoteViewsBig);
 
-        remoteViewsBig.setTextViewText(R.id.tvShipper, myDb2.getShipper(LoadNumber));
-        //remoteViews.setTextViewText(R.id.text_title, data.getTitle());
+                mNotificationManager = (NotificationManager) this
+                        .getSystemService(Context.NOTIFICATION_SERVICE);
 
-        remoteViewsBig.setTextViewText(R.id.tvConsignee, myDb2.getConsignee(LoadNumber));
-
-        //remoteViews.setTextViewText(R.id.text_content, data.getContent());
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID);
-        builder.setSmallIcon(R.drawable.truck_icon_16);
-        builder.setAutoCancel(true);
-        builder.setContentIntent(contentIntent);
-        builder.setPriority(NotificationCompat.PRIORITY_DEFAULT);
-        //builder.setCustomContentView(remoteViews);
-        builder.setContent(remoteViewsBig);
-
-        mNotificationManager = (NotificationManager) this
-                .getSystemService(Context.NOTIFICATION_SERVICE);
-
-
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationManager mNotificationManager =
-                    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-            // The user-visible name of the channel.
-            CharSequence name = getString(R.string.channel_name_new_load);
-            // The user-visible description of the channel.
-            String description = getString(R.string.channel_name_new_load_description);
-            int importance = NotificationManager.IMPORTANCE_HIGH;
-            NotificationChannel mChannel = new NotificationChannel(CHANNEL_ID, name, importance);
-            // Configure the notification channel.
-            mChannel.setDescription(description);
-            mChannel.enableLights(true);
-            // Sets the notification light color for notifications posted to this
-            // channel, if the device supports this feature.
-            mChannel.setLightColor(Color.YELLOW);
-            mChannel.setShowBadge(true);
-            mChannel.enableVibration(true);
-            mChannel.setVibrationPattern(new long[]{100, 200, 300, 400, 500, 400, 300, 200, 400});
-            assert mNotificationManager != null;
-            mNotificationManager.createNotificationChannel(mChannel);
-        } else {
-            mNotificationManager.notify(mNotificationIdNewLoad, builder.build());
-            SharedPreferences getAlarms = PreferenceManager.
-                    getDefaultSharedPreferences(getBaseContext());
-            if (getAlarms.getString("ringtonePref", null) != null) {
-                String alarms = getAlarms.getString("ringtonePref", null);
-                uriSound = Uri.parse(alarms);
-            } else {
-                uriSound = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.truck_horn);
-            }
-            Ringtone ring = RingtoneManager.getRingtone(getApplicationContext(), uriSound);
-            if (getAlarms.getBoolean("NewLoadSound", false)) {
-                ring.play();
-            }
-            // for vibrating phone
-            ((Vibrator) Objects.requireNonNull(getApplicationContext().getSystemService(
-                    Context.VIBRATOR_SERVICE))).vibrate(800);
-            Integer NewLoads = myDb.NotificationLoadCount();
-            ShortcutBadger.applyCount(this, NewLoads); //for 1.1.4+
-
+                if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    NotificationCompat.Builder nb = myNu.getCustomChannelNotification(remoteViewsBig, LOAD_INFO_CHANNEL_ID);
+                    myNu.getManager().notify(Integer.parseInt(LOAD_INFO_CHANNEL_ID), nb.build());
+                } else {
+                    mNotificationManager.notify(mNotificationIdNewLoad, builder.build());
+                    SharedPreferences getAlarms = PreferenceManager.
+                            getDefaultSharedPreferences(getBaseContext());
+                    if (getAlarms.getString("ringtonePref", null) != null) {
+                        String alarms = getAlarms.getString("ringtonePref", null);
+                        uriSound = Uri.parse(alarms);
+                    } else {
+                        uriSound = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.truck_horn);
+                    }
+                    Ringtone ring = RingtoneManager.getRingtone(getApplicationContext(), uriSound);
+                    if (getAlarms.getBoolean("NewLoadSound", false)) {
+                        ring.play();
+                    }
+                    // for vibrating phone
+                    ((Vibrator) Objects.requireNonNull(getApplicationContext().getSystemService(
+                            Context.VIBRATOR_SERVICE))).vibrate(800);
+                    Integer NewLoads = myDb.NotificationLoadCount();
+                    ShortcutBadger.applyCount(this, NewLoads); //for 1.1.4+
+                }
+            case MESSAGE_CHANNEL_ID:
+                NotificationCompat.Builder nb = myNu.getChannelNotification(notificationData.getTitle(), notificationData.getTextMessage(), NotificationUtils.MESSAGE_CHANNEL_ID);
+                myNu.getManager().notify(Integer.parseInt(MESSAGE_CHANNEL_ID), nb.build());
         }
     }
 }

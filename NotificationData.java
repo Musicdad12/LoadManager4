@@ -10,23 +10,23 @@ class NotificationData {
 
     static final String TEXT = "TEXT";
 
-    private int id; // identificador da notificação
+    private String id; // identificador da notificação
     private String title;
     private String textMessage;
     private String sound;
 
-    NotificationData(int id, String title, String textMessage, String sound) {
+    NotificationData(String id, String title, String textMessage, String sound) {
         this.id = id;
         this.title = title;
         this.textMessage = textMessage;
         this.sound = sound;
     }
 
-    public int getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(String id) {
         this.id = id;
     }
 

@@ -14,7 +14,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Locale;
 
 // Shows the title fragment which is a ListView
 // When a ListView item is selected we will put the DetailsFragment in the
@@ -69,6 +73,12 @@ public class Loads_List_Fragment extends Fragment {
             for (int i = 0; i < jsonArray.length(); i++) {
                 try {
                     JSONObject jsonObject = new JSONObject(jsonArray.getString(i));
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+                    SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss", Locale.US);
+                    Date newDate = dateFormat.parse(jsonObject.getString("ShipDate"));
+                    Date newTime = timeFormat.parse(jsonObject.getString("ShipTime"));
+                    dateFormat = new SimpleDateFormat("M/dd/yy", Locale.US);
+                    timeFormat = new SimpleDateFormat("h:mm a", Locale.US);
                     listdata.add(new LoadsList(jsonObject.getString("StopLoadNumber"),
                             myDb.getStatus(jsonObject.getString("StopLoadNumber")),
                             jsonObject.getString("ShipperName"),
@@ -77,10 +87,10 @@ public class Loads_List_Fragment extends Fragment {
                             jsonObject.getString("ConsName"),
                             jsonObject.getString("ConsCity"),
                             jsonObject.getString("ConsState"),
-                            jsonObject.getString("ShipDate"),
-                            jsonObject.getString("ShipTime")));
+                            dateFormat.format(newDate),
+                            timeFormat.format(newTime)));
 
-                } catch (JSONException e) {
+                } catch (JSONException | ParseException e) {
                     e.printStackTrace();
                 }
             }

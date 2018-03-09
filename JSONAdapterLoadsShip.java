@@ -117,7 +117,7 @@ class JSONAdapterLoadsShip extends BaseAdapter implements ListAdapter {
                 SimpleDateFormat spfDate =new SimpleDateFormat("yyyy-MM-dd", Locale.US);
                 Date newEarlyDate=spfDate.parse(ShipEarlyDate);
                 Date newLateDate=spfDate.parse(ShipLateDate);
-                spfDate = new SimpleDateFormat("MM/dd/yy", Locale.US);
+                spfDate = new SimpleDateFormat("M/d/yy", Locale.US);
                 ShipEarlyDate = spfDate.format(newEarlyDate);
                 ShipLateDate = spfDate.format(newLateDate);
                 SimpleDateFormat spfTime =new SimpleDateFormat("HH:mm:ss", Locale.US);

@@ -184,13 +184,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                 MainActivity.this.startActivity(intent);
             }
         });
-        butAlarm.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, AlarmActivity.class);
-                MainActivity.this.startActivity(intent);
-            }
-        });
+
         butAccident.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -323,17 +317,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             tvNewLoads.setText(R.string.no_new_load);
             tvNewLoads.setTextColor(Color.RED);
         }
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Notification.Builder nb = mNotificationUtils.
-                    getAndroidChannelNotification("New Load Information", "Check Load Manager for details");
 
-            mNotificationUtils.getManager().notify(101, nb.build());
-            if (NewLoads == 0) {
-                mNotificationUtils.getManager().cancel(101);
-            }
-        } else {
-            ShortcutBadger.applyCount(this, NewLoads); //for 1.1.4+
-        }
     }
     private void updateMessageView() {
         // Initialize textview for safety messages

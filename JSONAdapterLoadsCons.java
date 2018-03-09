@@ -3,6 +3,7 @@ package com.jrschugel.loadmanager;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.telephony.PhoneNumberUtils;
 import android.util.Log;
 import android.view.View;
@@ -115,7 +116,7 @@ class JSONAdapterLoadsCons extends BaseAdapter implements ListAdapter {
                 SimpleDateFormat spfDate =new SimpleDateFormat("yyyy-MM-dd", Locale.US);
                 Date newEarlyDate=spfDate.parse(ShipEarlyDate);
                 Date newLateDate=spfDate.parse(ShipLateDate);
-                spfDate = new SimpleDateFormat("MM/dd/yy", Locale.US);
+                spfDate = new SimpleDateFormat("M/d/yy", Locale.US);
                 ShipEarlyDate = spfDate.format(newEarlyDate);
                 ShipLateDate = spfDate.format(newLateDate);
                 SimpleDateFormat spfTime =new SimpleDateFormat("HH:mm:ss", Locale.US);
@@ -136,7 +137,9 @@ class JSONAdapterLoadsCons extends BaseAdapter implements ListAdapter {
             tvShipperAddr2.setText(ShipAddr2);
             tvShipperCity.setText(ShipCity);
             tvShipperState.setText(ShipState);
-            tvShipperPhone.setText(PhoneNumberUtils.formatNumber(ShipPhone, "US"));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                tvShipperPhone.setText(PhoneNumberUtils.formatNumber(ShipPhone, "US"));
+            }
             tvShipperContact.setText(ShipContact);
             String ShipEarly = "Early Date/Time: " + ShipEarlyDate + "  -  " + ShipEarlyTime;
             String ShipLate = "Late Date/Time:  " + ShipLateDate + "  -  " + ShipLateTime;

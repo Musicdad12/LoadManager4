@@ -18,6 +18,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String TABLE_STOPS = "STOPS";
     private static final String TABLE_EXPENSES = "EXPENSES";
     private static final String TABLE_SCANS = "SCANS";
+    private static final String TABLE_MESSAGES = "Messages";
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, 1);
@@ -74,6 +75,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 Config.TAG_SCANDESC + " TEXT, " +
                 Config.TAG_SCANURI + " TEXT) ; " );
 
+        db.execSQL("create table " + TABLE_MESSAGES +" ( _id INTEGER PRIMARY KEY AUTOINCREMENT, "+
+                Config.TAG_MESSTIMEDATE + " TEXT," +
+                Config.TAG_MESSSENDER + " TEXT, " +
+                Config.TAG_MESSTEXT + " TEXT) ; " );
+
         }
 
     @Override
@@ -82,6 +88,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_STOPS);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_EXPENSES);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_SCANS);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_MESSAGES);
         onCreate(db);
     }
 
@@ -215,5 +222,24 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         ContentValues contentValues = new ContentValues();
         contentValues.put(Config.TAG_TRLRNUMBER, newTrailerNumber);
         db.update(TABLE_NAME, contentValues, whereClause, null);
+    }
+
+    void saveMessage (String DateTime, String Sender, String Message) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(Config.TAG_MESSTIMEDATE, DateTime);
+        contentValues.put(Config.TAG_MESSSENDER, Sender);
+        contentValues.put(Config.TAG_MESSTEXT, Message);
+        db.insert(TABLE_MESSAGES, null, contentValues);
+    }
+
+    Cursor getMessages () {
+        SQLiteDatabase db = this.getReadableDatabase();
+        return db.rawQuery("SELECT * FROM " + TABLE_MESSAGES + " ORDER BY " + Config.TAG_MESSTIMEDATE + " ASC LIMIT 20",null);
+    }
+
+    void DeleteMessage (Integer MessageID) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(TABLE_MESSAGES, "_id = ?", new String[]{Integer.toString(MessageID)});
     }
 }
