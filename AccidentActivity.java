@@ -31,7 +31,7 @@ public class AccidentActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_accident);
-
+/*
         AccidentActivity.SectionsPagerAdapter mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
 
         // Set up the ViewPager with the sections adapter.
@@ -53,6 +53,7 @@ public class AccidentActivity extends AppCompatActivity {
 
                 Intent intent = new Intent(Intent.ACTION_SENDTO); // it's not ACTION_SEND
                 intent.setType("text/plain");
+                /*
                 intent.putExtra(Intent.EXTRA_SUBJECT, "Accident Report for Truck "+ Accident_Frag_3.TruckNo.getText().toString()+" Driven by "+Accident_Frag_3.DrvName.getText().toString());
                 String Body = "This is an accident report by " + Accident_Frag_3.DrvName.getText().toString() + " concerning an accident that happened on " +
                         Accident_Frag_5.AccDate.getText().toString() + ". The truck number is " + Accident_Frag_3.TruckNo.getText().toString() + ", and the trailer involved was " +
@@ -146,6 +147,7 @@ public class AccidentActivity extends AppCompatActivity {
                 startActivity(intent);
             }
 });
+*/
     }
 
     private boolean isEmpty(EditText etText) {

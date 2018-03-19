@@ -110,7 +110,17 @@ class DatabaseHelperExpense extends SQLiteOpenHelper {
         return resultSet;
     }
 
-    Boolean DeleteExpensefromListview (Integer LoadNumber, String Description, String PaymentType, String PONumber, String Gallons, String Amount) {
+    Boolean DeleteExpensefromListview (Long expenseID) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        int result = db.delete(TABLE_EXPENSES, "_id" + "=" + expenseID, null);
+        if (result == 0 ) {
+            return false;
+        }
+        return true;
+    }
+
+    Boolean copyDeleteExpensefromListview (Integer LoadNumber, String Description, String PaymentType, String PONumber, String Gallons, String Amount) {
         SQLiteDatabase db = this.getWritableDatabase();
 
         String Query = "SELECT * FROM " + TABLE_EXPENSES + " WHERE " + Config.TAG_EXPLOAD + " = " + LoadNumber + " AND " +

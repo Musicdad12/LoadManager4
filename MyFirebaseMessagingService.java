@@ -19,6 +19,7 @@ import android.os.Build;
 import android.os.Vibrator;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.RemoteViews;
 
@@ -200,6 +201,13 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                     ShortcutBadger.applyCount(this, NewLoads); //for 1.1.4+
                 }
             case MESSAGE_CHANNEL_ID:
+                if (!NotificationUtils.isAppIsInBackground(getApplicationContext())) {
+
+//add message to list
+                    Log.d("sender", "Broadcasting message");
+                    Intent intentBroadcast = new Intent("custom-message");
+                    LocalBroadcastManager.getInstance(this).sendBroadcast(intentBroadcast);
+                }
                 NotificationCompat.Builder nb = myNu.getChannelNotification(notificationData.getTitle(), notificationData.getTextMessage(), NotificationUtils.MESSAGE_CHANNEL_ID);
                 myNu.getManager().notify(Integer.parseInt(MESSAGE_CHANNEL_ID), nb.build());
         }

@@ -1,17 +1,25 @@
 package com.jrschugel.loadmanager;
 
 import android.annotation.TargetApi;
+import android.app.ActivityManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.ContextWrapper;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
+import android.util.Log;
 import android.widget.RemoteViews;
+
+import java.util.List;
+
+import static com.jrschugel.loadmanager.MainActivityFragment.messageListAdapter;
 
 public class NotificationUtils extends ContextWrapper {
 
@@ -20,6 +28,7 @@ public class NotificationUtils extends ContextWrapper {
     public static final String MESSAGE_CHANNEL_ID = "2466";
     public static final String LOAD_INFO_CHANNEL_NAME = "New Load Information";
     public static final String MESSAGE_CHANNEL_NAME = "Messages";
+    private static final String TAG = "NotificationUtils";
 
     public NotificationUtils(Context base) {
         super(base);
@@ -83,5 +92,39 @@ public class NotificationUtils extends ContextWrapper {
                 return new NotificationCompat.Builder(getApplicationContext(), channelID)
                         .setContent(remoteViews);
 
+    }
+
+    public static boolean isAppIsInBackground(Context context) {
+        Log.e(TAG, "isAppIsInBackground: "+"show" );
+        boolean isInBackground = true;
+        ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT) {
+            List<ActivityManager.RunningAppProcessInfo> runningProcesses = am.getRunningAppProcesses();
+            for (ActivityManager.RunningAppProcessInfo processInfo : runningProcesses) {
+                if (processInfo.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND &&
+                        processInfo.processName.equals(context.getPackageName())) {
+                    for (String activeProcess : processInfo.pkgList) {
+                        if (activeProcess.equals(context.getPackageName())) {
+                            isInBackground = false;
+                        }
+                    }
+                }
+            }
+        } else {
+            List<ActivityManager.RunningTaskInfo> taskInfo = am.getRunningTasks(1);
+            ComponentName componentInfo = taskInfo.get(0).topActivity;
+            if (componentInfo.getPackageName().equals(context.getPackageName())) {
+                isInBackground = false;
+            }
+        }
+
+        return isInBackground;
+    }
+
+    public static void updateTextMessages(Context context) {
+        DatabaseHelper myDb = new DatabaseHelper(context);
+        Cursor curMessages = myDb.getMessages();
+        messageListAdapter = new MessageListAdapter(context, curMessages);
+        MainActivityFragment.lstMessages.setAdapter(messageListAdapter);
     }
 }

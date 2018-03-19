@@ -82,7 +82,7 @@ class JSONAdapterLoadsExpense extends BaseAdapter implements ListAdapter {
                 if (!json_data.getString(Config.TAG_EXPPONUM).equals("")) {
                     ExpPONum = "P.O. # " + json_data.getString(Config.TAG_EXPPONUM);
                 }
-                if (!json_data.getString(Config.TAG_EXPGALLON).equals("0")) {
+                if (!json_data.getString(Config.TAG_EXPGALLON).equals("") && !json_data.getString(Config.TAG_EXPGALLON).equals("0")) {
                     ExpGallons = json_data.getString(Config.TAG_EXPGALLON) + " Gallons";
                 }
                 ExpAmount = "$ " + json_data.getString(Config.TAG_EXPAMOUNT);

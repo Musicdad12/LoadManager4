@@ -253,12 +253,12 @@ public class Loads_Frag_4 extends Fragment  {
                                 String PONumber = tvPONumber.getText().toString();
                                 String Gallons = tvGallons.getText().toString();
                                 String Amount = tvAmount.getText().toString();
-                                Boolean Success = myDb3.DeleteExpensefromListview(LoadNumber, Description, PaymentType, PONumber, Gallons, Amount);
+                                /*Boolean Success = myDb3.DeleteExpensefromListview(LoadNumber, Description, PaymentType, PONumber, Gallons, Amount);
                                 if (Success) {
                                     Toast.makeText(getContext(), "Deleted Successfully", Toast.LENGTH_LONG).show();
                                 } else {
                                     Toast.makeText(getContext(), "Delete Unsuccessful", Toast.LENGTH_LONG).show();
-                                }
+                                }*/
                                 LoadsList.invalidate();
                                 JSONArray jsonArray = myDb3.getExpenseDataJSON(getContext(), LoadNumber);
                                 JSONAdapterLoadsExpense jSONAdapter = new JSONAdapterLoadsExpense (getActivity(), jsonArray);//jArray is your json array

@@ -10,6 +10,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.pdf.PdfDocument;
 import android.net.Uri;
@@ -46,6 +47,10 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.baoyz.swipemenulistview.SwipeMenu;
+import com.baoyz.swipemenulistview.SwipeMenuCreator;
+import com.baoyz.swipemenulistview.SwipeMenuItem;
+import com.baoyz.swipemenulistview.SwipeMenuListView;
 
 import org.json.JSONArray;
 
@@ -79,7 +84,7 @@ public class Loads_Fragment_Expenses extends Fragment  {
     Context context;
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull final LayoutInflater inflater, final ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_sub__fragment04, container, false);
 
@@ -106,10 +111,31 @@ public class Loads_Fragment_Expenses extends Fragment  {
 
         JSONArray jsonArray = myDb3.getExpenseDataJSON(getContext(), LoadNumber);
 
-        final ListView LoadsList = rootView.findViewById(R.id.lstExpenses);
+        final SwipeMenuListView LoadsList = rootView.findViewById(R.id.lstExpenses);
 
-        JSONAdapterLoadsExpense jSONAdapter = new JSONAdapterLoadsExpense (getActivity(), jsonArray);//jArray is your json array
+        SwipeMenuCreator creator = new SwipeMenuCreator() {
 
+            @Override
+            public void create(SwipeMenu menu) {
+                // create "delete" item
+                SwipeMenuItem deleteItem = new SwipeMenuItem(
+                        context);
+                // set item background
+                deleteItem.setBackground(new ColorDrawable(Color.rgb(0xF9,
+                        0x3F, 0x25)));
+                // set item width
+                deleteItem.setWidth(150);
+                // set a icon
+                deleteItem.setIcon(R.drawable.ic_delete);
+                // add to menu
+                menu.addMenuItem(deleteItem);
+            }
+        };
+
+// set creator
+        LoadsList.setMenuCreator(creator);
+
+        final JSONAdapterLoadsExpense jSONAdapter = new JSONAdapterLoadsExpense (getActivity(), jsonArray);//jArray is your json array
         //Set the above adapter as the adapter of choice for our list
         LoadsList.setAdapter(jSONAdapter);
 
@@ -228,94 +254,105 @@ public class Loads_Fragment_Expenses extends Fragment  {
             }
         });
 
-        LoadsList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        LoadsList.setOnSwipeListener(new SwipeMenuListView.OnSwipeListener() {
 
             @Override
-            public void onItemClick(AdapterView<?> parent, final View v,
-                                    int position, long id) {
-                // Use the Builder class for convenient dialog construction
-                AlertDialog.Builder builder = new AlertDialog.Builder(context);
-                builder.setMessage("Are you sure you want to delete this item?")
-                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int id) {
-                                Log.i("Dialog", "You clicked OK");
-                                TextView tvLoadNumber = v.findViewById(R.id.textViewLoadNumber);
-                                TextView tvDescription = v.findViewById(R.id.textViewDescription);
-                                TextView tvPaymentType = v.findViewById(R.id.textViewPaymentType);
-                                TextView tvPONumber = v.findViewById(R.id.textViewPONumber);
-                                TextView tvGallons = v.findViewById(R.id.textViewGallons);
-                                TextView tvAmount = v.findViewById(R.id.textViewAmount);
-                                final Integer LoadNumber = Integer.parseInt(tvLoadNumber.getText().toString());
-                                final String Description = tvDescription.getText().toString();
-                                final String PaymentType = tvPaymentType.getText().toString();
-                                String PONumber = tvPONumber.getText().toString();
-                                String Gallons = tvGallons.getText().toString();
-                                String Amount = tvAmount.getText().toString();
-                                Boolean Success = myDb3.DeleteExpensefromListview(LoadNumber, Description, PaymentType, PONumber, Gallons, Amount);
-                                if (Success) {
-                                    Toast.makeText(getContext(), "Deleted Successfully", Toast.LENGTH_LONG).show();
-                                } else {
-                                    Toast.makeText(getContext(), "Delete Unsuccessful", Toast.LENGTH_LONG).show();
-                                }
-                                LoadsList.invalidate();
-                                JSONArray jsonArray = myDb3.getExpenseDataJSON(getContext(), LoadNumber);
-                                JSONAdapterLoadsExpense jSONAdapter = new JSONAdapterLoadsExpense (getActivity(), jsonArray);//jArray is your json array
-                                LoadsList.setAdapter(jSONAdapter);
-                                // Delete from online Database
-                                if (PONumber.equals("")) {
-                                    PONumber = "0" ;
-                                }
-                                if (Gallons.equals("")) {
-                                    Gallons = "0";
-                                }
-                                if (Amount.equals("")) {
-                                    Amount = "0";
-                                }
-                                final String finalPONumber = PONumber;
-                                final String finalGallons = Gallons;
-                                final String finalAmount = Amount;
+            public void onSwipeStart(int position) {
+                LoadsList.smoothOpenMenu(position);
+            }
 
-                                RequestQueue requestQueueStops = Volley.newRequestQueue(Objects.requireNonNull(getContext()));
+            @Override
+            public void onSwipeEnd(int position) {
 
-                                StringRequest stringRequestStops = new StringRequest(Request.Method.POST, Config.DATA_DELETE_EXPENSE,
-                                        new Response.Listener<String>() {
-                                            @Override
-                                            public void onResponse(String StopsResponse) {
-                                                Toast.makeText(getContext(), "Online Record Deleted", Toast.LENGTH_LONG).show();
-                                            }
-                                        },
-                                        new Response.ErrorListener() {
-                                            @Override
-                                            public void onErrorResponse(VolleyError error) {
-                                                Log.e("Volley Error: ", error.toString());
-                                            }
-                                        }) {
+            }
+        });
+
+        LoadsList.setOnMenuItemClickListener(new SwipeMenuListView.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(int position, SwipeMenu menu, int index) {
+                switch (index) {
+                    case 0:
+                        //delete
+                        Log.i("Dialog", "You clicked OK");
+                        TextView tvLoadNumber = LoadsList.getChildAt(position).findViewById(R.id.textViewLoadNumber);
+                        TextView tvDescription = LoadsList.getChildAt(position).findViewById(R.id.textViewDescription);
+                        TextView tvPaymentType = LoadsList.getChildAt(position).findViewById(R.id.textViewPaymentType);
+                        TextView tvPONumber = LoadsList.getChildAt(position).findViewById(R.id.textViewPONumber);
+                        TextView tvGallons = LoadsList.getChildAt(position).findViewById(R.id.textViewGallons);
+                        TextView tvAmount = LoadsList.getChildAt(position).findViewById(R.id.textViewAmount);
+                        Long expenseID = jSONAdapter.getItemId(position);
+                        final Integer LoadNumber = Integer.parseInt(tvLoadNumber.getText().toString());
+                        final String Description = tvDescription.getText().toString();
+                        final String PaymentType = tvPaymentType.getText().toString();
+                        String PONumber = tvPONumber.getText().toString();
+                        PONumber = PONumber.replace("P.O. # ", "");
+                        String Gallons = tvGallons.getText().toString();
+                        Gallons = Gallons.replace(" Gallons", "");
+                        String Amount = tvAmount.getText().toString();
+                        Amount = Amount.replace("$ ", "");
+                        Boolean Success = myDb3.copyDeleteExpensefromListview(LoadNumber, Description, PaymentType, PONumber, Gallons, Amount);
+                        if (Success) {
+                            Toast.makeText(getContext(), "Deleted Successfully", Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(getContext(), "Delete Unsuccessful", Toast.LENGTH_LONG).show();
+                        }
+                        LoadsList.invalidate();
+
+                        JSONArray jsonArray = myDb3.getExpenseDataJSON(getContext(), LoadNumber);
+                        JSONAdapterLoadsExpense jSONAdapter = new JSONAdapterLoadsExpense (getActivity(), jsonArray);//jArray is your json array
+                        LoadsList.setAdapter(jSONAdapter);
+                        // Delete from online Database
+                        if (PONumber.equals("")) {
+                            PONumber = "0" ;
+                        }
+                        if (Gallons.equals("")) {
+                            Gallons = "0";
+                        }
+                        if (Amount.equals("")) {
+                            Amount = "0";
+                        }
+                        final String finalPONumber = PONumber;
+                        final String finalGallons = Gallons;
+                        final String finalAmount = Amount;
+
+                        RequestQueue requestQueueStops = Volley.newRequestQueue(Objects.requireNonNull(getContext()));
+
+                        StringRequest stringRequestStops = new StringRequest(Request.Method.POST, Config.DATA_DELETE_EXPENSE,
+                                new Response.Listener<String>() {
                                     @Override
-                                    protected Map<String, String> getParams() {
-                                        Map<String, String> parameters = new HashMap<>();
-                                        parameters.put("LoadNumber", LoadNumber.toString());
-                                        parameters.put("Description", DescriptionCode(Description));
-                                        parameters.put("PaymentType", PaymentTypeCode(PaymentType));
-                                        parameters.put("PONumber", finalPONumber);
-                                        parameters.put("Gallons", finalGallons);
-                                        parameters.put("Amount", finalAmount);
-
-                                        return parameters;
+                                    public void onResponse(String StopsResponse) {
+                                        Toast.makeText(getContext(), "Online Record Deleted", Toast.LENGTH_LONG).show();
                                     }
-                                };
-                                //Adding request to the queue
-                                requestQueueStops.add(stringRequestStops);
+                                },
+                                new Response.ErrorListener() {
+                                    @Override
+                                    public void onErrorResponse(VolleyError error) {
+                                        Log.e("Volley Error: ", error.toString());
+                                    }
+                                }) {
+                            @Override
+                            protected Map<String, String> getParams() {
+                                Map<String, String> parameters = new HashMap<>();
+                                parameters.put("LoadNumber", LoadNumber.toString());
+                                parameters.put("Description", DescriptionCode(Description));
+                                parameters.put("PaymentType", PaymentTypeCode(PaymentType));
+                                parameters.put("PONumber", finalPONumber);
+                                parameters.put("Gallons", finalGallons);
+                                parameters.put("Amount", finalAmount);
 
+                                return parameters;
                             }
-                        })
-                        .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int id) {
-                                Log.i("Dialog", "You clicked Cancel");
-                                String test = tvLoadNumber.getText().toString();
-                                Log.i("LoadNumber", test);
-                            }
-                        })
-                        .show();
+                        };
+                        //Adding request to the queue
+                        requestQueueStops.add(stringRequestStops);
+                        break;
+                    case 1:
+                        // not implemented
+                        Log.d(TAG, "onMenuItemClick: " + index);
+                        break;
+                }
+                // false : close the menu; true : not close the menu
+                return false;
             }
         });
 

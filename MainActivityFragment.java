@@ -1,14 +1,19 @@
 package com.jrschugel.loadmanager;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,6 +27,10 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.baoyz.swipemenulistview.SwipeMenu;
+import com.baoyz.swipemenulistview.SwipeMenuCreator;
+import com.baoyz.swipemenulistview.SwipeMenuItem;
+import com.baoyz.swipemenulistview.SwipeMenuListView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -37,17 +46,19 @@ public class MainActivityFragment extends Fragment implements SharedPreferences.
     // Session Manager Class
     SessionManager session;
     // Database Helper classes
-    DatabaseHelper myDb;
+    static DatabaseHelper myDb;
     DatabaseHelperStops myDb2;
     DatabaseHelperExpense myDb3;
     // Initialize array for safety messages
     String[] mMessageArray;
-    ListView lstMessages;
+    static SwipeMenuListView lstMessages;
+    static MessageListAdapter messageListAdapter;
+    private static final String TAG = "MainActivityFragment";
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.activity_main_fragment, container, false);
+    public View onCreateView(@NonNull final LayoutInflater inflater, @Nullable final ViewGroup container, @Nullable Bundle savedInstanceState) {
+        final View rootView = inflater.inflate(R.layout.activity_main_fragment, container, false);
         context = getActivity();
 
         // Start database helper classes
@@ -114,10 +125,60 @@ public class MainActivityFragment extends Fragment implements SharedPreferences.
         // Display welcome message
         tvWelcome.setText(FullName);
 
+        SwipeMenuCreator creator = new SwipeMenuCreator() {
+
+            @Override
+            public void create(SwipeMenu menu) {
+                // create "delete" item
+                SwipeMenuItem deleteItem = new SwipeMenuItem(
+                        context);
+                // set item background
+                deleteItem.setBackground(new ColorDrawable(Color.rgb(0xF9,
+                        0x3F, 0x25)));
+                // set item width
+                deleteItem.setWidth(150);
+                // set a icon
+                deleteItem.setIcon(R.drawable.ic_delete);
+                // add to menu
+                menu.addMenuItem(deleteItem);
+            }
+        };
+
+// set creator
+        lstMessages.setMenuCreator(creator);
+
+        LocalBroadcastManager.getInstance(context).registerReceiver(mMessageReceiver,
+                new IntentFilter("custom-message"));
         //Setup check for new loads and send notification
         LoadPreferences();
         updateMessageView(rootView);
-        updateTextMessages(rootView);
+        NotificationUtils.updateTextMessages(context);
+
+        lstMessages.setOnMenuItemClickListener(new SwipeMenuListView.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(int position, SwipeMenu menu, int index) {
+                switch (index) {
+                    case 0:
+                        //delete
+                        Log.d(TAG, "onMenuItemClick: " + index);
+                        View swipeView = inflater.inflate(R.layout.listview_message_layout, container, false);
+                        TextView textview = swipeView.findViewById(R.id.tvMessageDateTime);
+                        Long msgID = messageListAdapter.getItemId(position);
+                        myDb.DeleteMessage(msgID);
+                        messageListAdapter.notifyDataSetChanged();
+                        NotificationUtils.updateTextMessages(context);
+                        Log.d(TAG, "onMenuItemClick: " + msgID);
+
+                        break;
+                    case 1:
+                        // not implemented
+                        Log.d(TAG, "onMenuItemClick: " + index);
+                        break;
+                }
+                // false : close the menu; true : not close the menu
+                return false;
+            }
+        });
 
         // Get new load count
         Integer NewLoads = myDb.NewLoadCount();
@@ -148,10 +209,20 @@ public class MainActivityFragment extends Fragment implements SharedPreferences.
         textView.setText(mMessageArray[generatedIndex]);
     }
 
-    private void updateTextMessages(View v) {
-        Cursor curMessages = myDb.getMessages();
-        MessageListAdapter messageListAdapter = new MessageListAdapter(getActivity(), curMessages);
-        lstMessages.setAdapter(messageListAdapter);
+    // Our handler for received Intents. This will be called whenever an Intent
+// with an action named "custom-event-name" is broadcasted.
+    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            NotificationUtils.updateTextMessages(context);
+            Log.d("receiver", "Got message: " );
+        }
+    };
+
+    @Override
+    public void onDestroyView() {
+        LocalBroadcastManager.getInstance(context).unregisterReceiver(mMessageReceiver);
+        super.onDestroyView();
     }
 
     private void LoadPreferences() {

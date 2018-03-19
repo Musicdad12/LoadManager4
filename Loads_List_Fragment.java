@@ -35,6 +35,7 @@ public class Loads_List_Fragment extends Fragment {
     Context context;
     private INavActivity mINavActivity;
     View detailsFrame;
+    View rootView;
 
     // Currently selected item in the ListView
     int mCurCheckPosition = 0;
@@ -48,7 +49,13 @@ public class Loads_List_Fragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_loads_list, container, false);
+        if(rootView != null){
+            if(rootView.getParent()!=null)
+                ((ViewGroup)rootView.getParent()).removeView(rootView);
+            return rootView;
+        }
+        rootView = inflater.inflate(R.layout.fragment_loads_list, container, false);
+
         context = getActivity();
 
         lstView = rootView.findViewById(R.id.custom_list);
@@ -150,8 +157,8 @@ public class Loads_List_Fragment extends Fragment {
         if (mDuelPane) {
 
             // Create an object that represents the current FrameLayout
-            Loads_Details_Fragment details = (Loads_Details_Fragment)
-                    getFragmentManager().findFragmentById(R.id.details);
+            //Loads_Details_Fragment details = (Loads_Details_Fragment)
+            //        getFragmentManager().findFragmentById(R.id.details);
 
             // When a DetailsFragment is created by calling newInstance the index for the data
             // it is supposed to show is passed to it. If that index hasn't been assigned we must
@@ -159,7 +166,7 @@ public class Loads_List_Fragment extends Fragment {
             if (loadnumber != null) {
 
                 // Make the details fragment and give it the currently selected index
-                details = Loads_Details_Fragment.newInstance(loadnumber);
+                Loads_Details_Fragment details = Loads_Details_Fragment.newInstance(loadnumber);
 
                 // Start Fragment transactions
                 getFragmentManager().beginTransaction()

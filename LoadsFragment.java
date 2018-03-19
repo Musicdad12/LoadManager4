@@ -19,11 +19,17 @@ public class LoadsFragment extends Fragment {
     Context context;
     // Session Manager Class
     SessionManager session;
+    View rootView;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.activity_loads, container, false);
+        if(rootView != null){
+            if(rootView.getParent()!=null)
+                ((ViewGroup)rootView.getParent()).removeView(rootView);
+            return rootView;
+        }
+        rootView = inflater.inflate(R.layout.activity_loads, container, false);
         context = getActivity();
 
         myDb = new DatabaseHelper(context);
